@@ -54,6 +54,9 @@ public class PlayerController3D : MonoBehaviour
     public SquishEffect squishEffect;
     public WallClimb wallClimb;
 
+    [Header("Morte e Caduta")]
+    public float limiteCaduta = -10f; // Altezza sotto la quale muori
+
     private CharacterController cc;
     private Vector3 velocity;
     private bool isGrounded;
@@ -105,6 +108,12 @@ public class PlayerController3D : MonoBehaviour
         ApplyGravity();
         ApplyMove();
         RotateToFacing();
+
+        // CONTROLLO MORTE (DENTRO UPDATE)
+        if (transform.position.y < limiteCaduta)
+        {
+            Die();
+        }
     }
 
     void GatherInput()
@@ -283,10 +292,11 @@ public class PlayerController3D : MonoBehaviour
 
     void ApplyMove() => cc.Move(velocity * Time.deltaTime);
 
-    // FUNZIONI RICHIESTE DA ALTRI SCRIPT
     public void MoveByVector(Vector3 motion) => cc.Move(motion * Time.deltaTime);
     public void RefillDash() => dashesLeft = maxDashes;
     public void SetVelocity(Vector3 v) => velocity = v;
+
+    // USATO DAI CHECKPOINT
     public void SetRespawnPoint(Vector3 pos) => respawnPosition = pos;
 
     void RotateToFacing()
@@ -296,7 +306,18 @@ public class PlayerController3D : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(flat), rotationSpeed * Time.deltaTime);
     }
 
-    public void Die() { if (RespawnManager3D.Instance != null) RespawnManager3D.Instance.KillPlayer(gameObject, respawnPosition); }
+    // FUNZIONE DI MORTE
+    public void Die()
+    {
+        velocity = Vector3.zero; // Ferma il movimento
+
+        // Teletrasporto immediato al checkpoint
+        cc.enabled = false;
+        transform.position = respawnPosition;
+        cc.enabled = true;
+
+        Debug.Log("Il Rapanello è caduto! Respawn effettuato.");
+    }
 
     void OnDrawGizmosSelected()
     {

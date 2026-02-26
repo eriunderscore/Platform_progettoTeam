@@ -6,12 +6,18 @@ public class RaccogliMoneta : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            // Ora cerchiamo il componente con il nuovo nome
-            ContatoreMonete contatore = Object.FindAnyObjectByType<ContatoreMonete>();
+            // ORA CERCA IL NOME NUOVO: ContenitoreMonete
+            ContenitoreMonete contatore = Object.FindFirstObjectByType<ContenitoreMonete>(FindObjectsInactive.Include);
 
             if (contatore != null)
             {
                 contatore.AggiungiMoneta(1);
+                Debug.Log("Moneta inviata al Contenitore!");
+            }
+            else
+            {
+                // Questo errore apparirà se lo script sul Canvas non è stato ancora applicato
+                Debug.LogError("ERRORE: Non ho trovato nessuno script chiamato ContenitoreMonete nella scena!");
             }
 
             Destroy(gameObject);

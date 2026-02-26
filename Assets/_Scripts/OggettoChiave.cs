@@ -4,14 +4,21 @@ public class OggettoChiave : MonoBehaviour
 {
     private void OnTriggerEnter(Collider other)
     {
+        // 1. IL RAPANELLO DEVE AVERE IL TAG "Player" (Scritto così!)
         if (other.CompareTag("Player"))
         {
-            // Qui puoi aggiungere un messaggio tipo "Hai preso la chiave!"
-            Debug.Log("Chiave raccolta!");
+            // 2. Cerca il nuovo script delle chiavi
+            ContenitoreChiavi scriptChiavi = Object.FindAnyObjectByType<ContenitoreChiavi>();
 
-            // Se hai un Manager per le chiavi, chiamalo qui
-            // Altrimenti, per ora, falla solo sparire
-            Destroy(gameObject);
+            if (scriptChiavi != null)
+            {
+                scriptChiavi.AggiungiChiave();
+                Destroy(gameObject); // ORA DEVE SPARIRE
+            }
+            else
+            {
+                Debug.LogError("Non trovo ContenitoreChiavi sul Canvas!");
+            }
         }
     }
 }

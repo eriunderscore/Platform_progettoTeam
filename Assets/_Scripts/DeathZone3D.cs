@@ -2,45 +2,40 @@ using UnityEngine;
 
 public class DeathZone3D : MonoBehaviour
 {
-    [Header("Visual")]
-    public bool showInGame = true;
-    public Color zoneColor = new Color(1f, 0f, 0f, 0.4f);
+    [Header("Respawn Settings")]
+    public Transform puntoDiPartenza; // Trascina qui l'oggetto del punto iniziale (es. lo SpawnPoint)
 
-    void Awake()
-    {
-        // Se non vogliamo vederla, disattiviamo il renderer e usciamo
-        MeshRenderer mr = GetComponent<MeshRenderer>();
-        if (!showInGame)
-        {
-            if (mr != null) mr.enabled = false;
-            return;
-        }
-
-        // Creazione materiale rosso (il tuo vecchio codice)
-        if (mr != null)
-        {
-            Material mat = new Material(Shader.Find("Standard"));
-            mat.SetFloat("_Mode", 3);
-            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            mat.SetInt("_ZWrite", 0);
-            mat.EnableKeyword("_ALPHABLEND_ON");
-            mat.renderQueue = 3000;
-            mat.color = zoneColor;
-            mr.material = mat;
-        }
-    }
-
-    // --- QUESTA È LA PARTE CHE MANCAVA ---
     private void OnTriggerEnter(Collider other)
     {
         // Controlla se l'oggetto che entra ha il tag "Player"
         if (other.CompareTag("Player"))
         {
+            // Cerchiamo lo script del giocatore
             PlayerController3D player = other.GetComponent<PlayerController3D>();
+
             if (player != null)
             {
-                player.Die(); // Chiama la funzione morte che toglie la vita e respawna
+                // 1. Chiamiamo la funzione morte (toglie vita/aggiorna UI)
+                player.Die();
+
+                // 2. Teletrasporto al punto di partenza
+                if (puntoDiPartenza != null)
+                {
+                    // Se usi un CharacterController, dobbiamo spegnerlo un attimo per "teletrasportare"
+                    CharacterController cc = other.GetComponent<CharacterController>();
+
+                    if (cc != null) cc.enabled = false;
+
+                    other.transform.position = puntoDiPartenza.position;
+
+                    if (cc != null) cc.enabled = true;
+
+                    Debug.Log("Il Rapanello è caduto! Respawn effettuato.");
+                }
+                else
+                {
+                    Debug.LogError("ERRORE: Manca il 'Punto Di Partenza' nell'Inspector della DeathZone!");
+                }
             }
         }
     }
