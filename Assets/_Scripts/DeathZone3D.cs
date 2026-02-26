@@ -3,29 +3,45 @@ using UnityEngine;
 public class DeathZone3D : MonoBehaviour
 {
     [Header("Visual")]
-    [Tooltip("Uncheck to make the death zone invisible in the final game")]
     public bool showInGame = true;
     public Color zoneColor = new Color(1f, 0f, 0f, 0.4f);
 
     void Awake()
     {
-        if (!showInGame) return;
-
+        // Se non vogliamo vederla, disattiviamo il renderer e usciamo
         MeshRenderer mr = GetComponent<MeshRenderer>();
-        if (mr == null) return;
+        if (!showInGame)
+        {
+            if (mr != null) mr.enabled = false;
+            return;
+        }
 
-        // Build a transparent red material at runtime
-        Material mat = new Material(Shader.Find("Standard"));
+        // Creazione materiale rosso (il tuo vecchio codice)
+        if (mr != null)
+        {
+            Material mat = new Material(Shader.Find("Standard"));
+            mat.SetFloat("_Mode", 3);
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.SetInt("_ZWrite", 0);
+            mat.EnableKeyword("_ALPHABLEND_ON");
+            mat.renderQueue = 3000;
+            mat.color = zoneColor;
+            mr.material = mat;
+        }
+    }
 
-        // Set Standard shader to Transparent mode
-        mat.SetFloat("_Mode", 3);
-        mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        mat.SetInt("_ZWrite", 0);
-        mat.EnableKeyword("_ALPHABLEND_ON");
-        mat.renderQueue = 3000;
-        mat.color = zoneColor;
-
-        mr.material = mat;
+    // --- QUESTA È LA PARTE CHE MANCAVA ---
+    private void OnTriggerEnter(Collider other)
+    {
+        // Controlla se l'oggetto che entra ha il tag "Player"
+        if (other.CompareTag("Player"))
+        {
+            PlayerController3D player = other.GetComponent<PlayerController3D>();
+            if (player != null)
+            {
+                player.Die(); // Chiama la funzione morte che toglie la vita e respawna
+            }
+        }
     }
 }
