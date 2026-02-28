@@ -3,44 +3,63 @@ using TMPro;
 
 public class ContenitoreMonete : MonoBehaviour
 {
-    public TextMeshProUGUI testoMonete;
-    public GameObject elementoGraficoMonete;
-    private int totaleMonete = 0;
+    [Header("CONFIGURAZIONE UI")]
+    public GameObject pannelloMonete; // TRASCINA QUI: L'oggetto 'ContenitoreMonete'
+    public TextMeshProUGUI testoMonete; // TRASCINA QUI: L'oggetto 'Testo'
+
+    private int moneteTotali = 0;
     private float timerVisibilita = 0f;
-    private bool inventarioAperto = false; // Aggiunto per gestire la R
+    private bool inventarioAperto = false;
 
     void Start()
     {
-        if (elementoGraficoMonete != null) elementoGraficoMonete.SetActive(false);
+        // All'inizio nascondiamo il pannello delle monete
+        if (pannelloMonete != null) pannelloMonete.SetActive(false);
+        AggiornaUI();
     }
 
     void Update()
     {
-        // AGGIUNTO: Anche le monete ora ascoltano il tasto R
+        // Controllo tasto R
         if (Input.GetKeyDown(KeyCode.R))
         {
             inventarioAperto = !inventarioAperto;
-            AggiornaStato();
+            Debug.Log("Inventario Monete: " + (inventarioAperto ? "APERTO" : "CHIUSO"));
+            AggiornaUI();
         }
 
-        if (timerVisibilita > 0 && !inventarioAperto)
+        // Controllo Timer
+        if (timerVisibilita > 0)
         {
             timerVisibilita -= Time.deltaTime;
-            if (timerVisibilita <= 0) AggiornaStato();
+            if (timerVisibilita <= 0 && !inventarioAperto)
+            {
+                AggiornaUI();
+            }
         }
     }
 
-    public void AggiungiMoneta(int valore)
+    public void AggiungiMoneta(int quantita)
     {
-        totaleMonete += valore;
-        if (testoMonete != null) testoMonete.text = totaleMonete.ToString();
-        timerVisibilita = 3f;
-        AggiornaStato();
+        moneteTotali += quantita;
+        timerVisibilita = 3f; // Mostra per 3 secondi
+        AggiornaUI();
+        Debug.Log("Moneta presa! Totale: " + moneteTotali);
     }
 
-    void AggiornaStato()
+    void AggiornaUI()
     {
-        bool deveEssereVisibile = inventarioAperto || timerVisibilita > 0;
-        if (elementoGraficoMonete != null) elementoGraficoMonete.SetActive(deveEssereVisibile);
+        // 1. Aggiorna il testo
+        if (testoMonete != null)
+        {
+            testoMonete.text = "x " + moneteTotali.ToString();
+        }
+
+        // 2. Gestisce la visibilità
+        if (pannelloMonete != null)
+        {
+            bool deveEssereVisibile = inventarioAperto || timerVisibilita > 0;
+            pannelloMonete.SetActive(deveEssereVisibile);
+        }
     }
 }
