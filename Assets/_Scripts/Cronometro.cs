@@ -1,21 +1,20 @@
 using UnityEngine;
-using TMPro; // Fondamentale per TextMeshPro
+using TMPro;
 using System;
 
 public class Cronometro : MonoBehaviour
 {
-    private TextMeshProUGUI testoTempo; // Versione Pro del componente
-    public float tempoRimanente = 120f;
+    private TextMeshProUGUI testoTempo;
+    private float tempoTrascorso = 0f; // Parte da zero
     private bool staCorrendo = true;
 
     void Awake()
     {
-        // Cerca il componente TextMeshPro sullo stesso oggetto
         testoTempo = GetComponent<TextMeshProUGUI>();
 
         if (testoTempo == null)
         {
-            Debug.LogError("Non ho trovato TextMeshPro su questo oggetto! Controlla di averlo messo sull'oggetto giusto.");
+            Debug.LogError("Non ho trovato TextMeshPro su questo oggetto!");
         }
     }
 
@@ -26,18 +25,11 @@ public class Cronometro : MonoBehaviour
 
     void Update()
     {
-        if (staCorrendo && tempoRimanente > 0)
+        if (staCorrendo)
         {
-            tempoRimanente -= Time.deltaTime;
-            if (tempoRimanente < 0) tempoRimanente = 0;
-
+            // Conta in avanti
+            tempoTrascorso += Time.deltaTime;
             AggiornaGraficaTesto();
-
-            if (tempoRimanente <= 0)
-            {
-                Debug.Log("TEMPO SCADUTO!");
-                // Qui puoi chiamare la morte del player se vuoi
-            }
         }
     }
 
@@ -45,13 +37,18 @@ public class Cronometro : MonoBehaviour
     {
         if (testoTempo != null)
         {
-            TimeSpan tempo = TimeSpan.FromSeconds(tempoRimanente);
-            // Formato 00:00:00
-            testoTempo.text = string.Format("{0:00}:{1:00}:{2:00}",
-                tempo.Minutes, tempo.Seconds, tempo.Milliseconds / 10);
+            TimeSpan tempo = TimeSpan.FromSeconds(tempoTrascorso);
+
+            // Formato 00:00 (Minuti : Secondi)
+            testoTempo.text = string.Format("{0:00}:{1:00}",
+                tempo.Minutes + (tempo.Hours * 60), // Include le ore nei minuti se il gioco dura molto
+                tempo.Seconds);
         }
     }
 
     public void FermaTempo() => staCorrendo = false;
     public void RipartiTempo() => staCorrendo = true;
+
+    // Funzione utile per resettare il tempo se il player muore
+    public void ResettaTempo() => tempoTrascorso = 0f;
 }

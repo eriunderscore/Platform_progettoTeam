@@ -55,7 +55,8 @@ public class PlayerController3D : MonoBehaviour
     public WallClimb wallClimb;
 
     [Header("Morte e Caduta")]
-    public float limiteCaduta = -10f; // Altezza sotto la quale muori
+    public float limiteCaduta = -10f;
+    public int maxLives = 3; // Vite massime impostabili dall'ispettore
 
     private CharacterController cc;
     private Vector3 velocity;
@@ -82,11 +83,15 @@ public class PlayerController3D : MonoBehaviour
     public float InputV { get; private set; }
     private Vector3 respawnPosition;
 
+    // VARIABILE VITE AGGIUNTA
+    private int currentLives;
+
     void Awake()
     {
         cc = GetComponent<CharacterController>();
         dashesLeft = maxDashes;
         respawnPosition = transform.position;
+        currentLives = maxLives; // Inizializza le vite
     }
 
     void Update()
@@ -109,7 +114,6 @@ public class PlayerController3D : MonoBehaviour
         ApplyMove();
         RotateToFacing();
 
-        // CONTROLLO MORTE (DENTRO UPDATE)
         if (transform.position.y < limiteCaduta)
         {
             Die();
@@ -296,7 +300,6 @@ public class PlayerController3D : MonoBehaviour
     public void RefillDash() => dashesLeft = maxDashes;
     public void SetVelocity(Vector3 v) => velocity = v;
 
-    // USATO DAI CHECKPOINT
     public void SetRespawnPoint(Vector3 pos) => respawnPosition = pos;
 
     void RotateToFacing()
@@ -306,17 +309,33 @@ public class PlayerController3D : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(flat), rotationSpeed * Time.deltaTime);
     }
 
-    // FUNZIONE DI MORTE
+    // MODIFICATA: ORA GESTISCE VITE E UI
     public void Die()
     {
-        velocity = Vector3.zero; // Ferma il movimento
+        velocity = Vector3.zero;
 
-        // Teletrasporto immediato al checkpoint
+        // Gestione Vite
+        currentLives--;
+
+        // Aggiorna UI dei Cuori
+        if (LivesUI.Instance != null)
+        {
+            LivesUI.Instance.OnPlayerDied(currentLives);
+        }
+
+        if (currentLives <= 0)
+        {
+            // Reset base in caso di Game Over (puoi aggiungere altro qui)
+            currentLives = maxLives;
+            if (LivesUI.Instance != null) LivesUI.Instance.OnGameReset(currentLives);
+        }
+
+        // Teletrasporto al respawn
         cc.enabled = false;
         transform.position = respawnPosition;
         cc.enabled = true;
 
-        Debug.Log("Il Rapanello è caduto! Respawn effettuato.");
+        Debug.Log("Il Rapanello è morto! Vite rimaste: " + currentLives);
     }
 
     void OnDrawGizmosSelected()

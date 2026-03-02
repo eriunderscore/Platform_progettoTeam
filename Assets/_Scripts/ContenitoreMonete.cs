@@ -5,7 +5,7 @@ public class ContenitoreMonete : MonoBehaviour
 {
     [Header("CONFIGURAZIONE UI")]
     public GameObject pannelloMonete;
-    public TextMeshProUGUI testoMonete;  
+    public TextMeshProUGUI testoMonete;
 
     private int moneteTotali = 0;
     private float timerVisibilita = 0f;
@@ -49,10 +49,10 @@ public class ContenitoreMonete : MonoBehaviour
 
     void AggiornaUI()
     {
-        
+        // Modificato: rimosso "x" prima del numero
         if (testoMonete != null)
         {
-            testoMonete.text = "x " + moneteTotali.ToString();
+            testoMonete.text = moneteTotali.ToString();
         }
 
         // 2. Gestisce la visibilità
