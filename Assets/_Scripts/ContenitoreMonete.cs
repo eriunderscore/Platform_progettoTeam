@@ -13,14 +13,12 @@ public class ContenitoreMonete : MonoBehaviour
 
     void Start()
     {
-        // All'inizio nascondiamo il pannello delle monete
         if (pannelloMonete != null) pannelloMonete.SetActive(false);
         AggiornaUI();
     }
 
     void Update()
     {
-        // Controllo tasto R
         if (Input.GetKeyDown(KeyCode.R))
         {
             inventarioAperto = !inventarioAperto;
@@ -28,7 +26,6 @@ public class ContenitoreMonete : MonoBehaviour
             AggiornaUI();
         }
 
-        // Controllo Timer
         if (timerVisibilita > 0)
         {
             timerVisibilita -= Time.deltaTime;
@@ -42,20 +39,16 @@ public class ContenitoreMonete : MonoBehaviour
     public void AggiungiMoneta(int quantita)
     {
         moneteTotali += quantita;
-        timerVisibilita = 3f; // Mostra per 3 secondi
+        timerVisibilita = 3f;
         AggiornaUI();
         Debug.Log("Moneta presa! Totale: " + moneteTotali);
     }
 
     void AggiornaUI()
     {
-        // Modificato: rimosso "x" prima del numero
         if (testoMonete != null)
-        {
-            testoMonete.text = moneteTotali.ToString();
-        }
+            testoMonete.text = moneteTotali.ToString("D3");
 
-        // 2. Gestisce la visibilità
         if (pannelloMonete != null)
         {
             bool deveEssereVisibile = inventarioAperto || timerVisibilita > 0;

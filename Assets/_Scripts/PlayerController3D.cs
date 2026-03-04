@@ -7,10 +7,10 @@ public class PlayerController3D : MonoBehaviour
     [Header("Movement")]
     public float moveSpeed = 8f;
     public float iceFactor = 1f;
-    public float acceleration = 14f;
-    public float deceleration = 10f;
-    public float airAcceleration = 5f;
-    public float airDeceleration = 2f;
+    public float acceleration = 60f;      // ERA 14 → alzato per risposta immediata
+    public float deceleration = 60f;      // ERA 10 → alzato per stop istantaneo
+    public float airAcceleration = 40f;   // ERA 5  → molto più air control
+    public float airDeceleration = 8f;    // ERA 2  → frena in aria senza essere scivoloso
     public float rotationSpeed = 15f;
 
     [Header("Jump")]
@@ -56,7 +56,6 @@ public class PlayerController3D : MonoBehaviour
 
     [Header("Morte e Caduta")]
     public float limiteCaduta = -10f;
-    public int maxLives = 3; // Vite massime impostabili dall'ispettore
 
     private CharacterController cc;
     private Vector3 velocity;
@@ -83,15 +82,11 @@ public class PlayerController3D : MonoBehaviour
     public float InputV { get; private set; }
     private Vector3 respawnPosition;
 
-    // VARIABILE VITE AGGIUNTA
-    private int currentLives;
-
     void Awake()
     {
         cc = GetComponent<CharacterController>();
         dashesLeft = maxDashes;
         respawnPosition = transform.position;
-        currentLives = maxLives; // Inizializza le vite
     }
 
     void Update()
@@ -115,9 +110,7 @@ public class PlayerController3D : MonoBehaviour
         RotateToFacing();
 
         if (transform.position.y < limiteCaduta)
-        {
             Die();
-        }
     }
 
     void GatherInput()
@@ -232,6 +225,7 @@ public class PlayerController3D : MonoBehaviour
     void HandleMovement()
     {
         if (isDashing || wallJumpTimer > 0f) return;
+
         Vector3 camForward = cameraTransform.forward; camForward.y = 0f; camForward.Normalize();
         Vector3 camRight = cameraTransform.right; camRight.y = 0f; camRight.Normalize();
         Vector3 inputDir = camForward * InputV + camRight * InputH;
@@ -240,27 +234,31 @@ public class PlayerController3D : MonoBehaviour
 
         if (isGrounded)
         {
+            // ── A TERRA: stop istantaneo, zero scivolamento ──────────────
             Vector3 targetVelocity = inputDir * moveSpeed;
-            if (inputMag > 0.01f)
-            {
-                velocity.x = Mathf.MoveTowards(velocity.x, targetVelocity.x, acceleration * iceFactor * Time.deltaTime);
-                velocity.z = Mathf.MoveTowards(velocity.z, targetVelocity.z, acceleration * iceFactor * Time.deltaTime);
-            }
-            else
-            {
-                velocity.x = Mathf.MoveTowards(velocity.x, 0f, deceleration * iceFactor * Time.deltaTime);
-                velocity.z = Mathf.MoveTowards(velocity.z, 0f, deceleration * iceFactor * Time.deltaTime);
-            }
+            float accel = (inputMag > 0.01f) ? acceleration * iceFactor : deceleration * iceFactor;
+            velocity.x = Mathf.MoveTowards(velocity.x, targetVelocity.x, accel * Time.deltaTime);
+            velocity.z = Mathf.MoveTowards(velocity.z, targetVelocity.z, accel * Time.deltaTime);
         }
         else
         {
+            // ── IN ARIA: controllo direzionale con cap sulla velocità orizzontale ──
+            Vector3 horizontal = new Vector3(velocity.x, 0f, velocity.z);
+
             if (inputMag > 0.01f)
             {
-                velocity.x += inputDir.x * airAcceleration * Time.deltaTime;
-                velocity.z += inputDir.z * airAcceleration * Time.deltaTime;
+                // Aggiungi velocità nella direzione dell'input, clampata a moveSpeed
+                Vector3 targetHorizontal = inputDir * moveSpeed;
+                horizontal = Vector3.MoveTowards(horizontal, targetHorizontal, airAcceleration * Time.deltaTime);
             }
-            velocity.x = Mathf.MoveTowards(velocity.x, 0f, airDeceleration * Time.deltaTime);
-            velocity.z = Mathf.MoveTowards(velocity.z, 0f, airDeceleration * Time.deltaTime);
+            else
+            {
+                // Nessun input: decelera gradualmente (ma non blocco netto)
+                horizontal = Vector3.MoveTowards(horizontal, Vector3.zero, airDeceleration * Time.deltaTime);
+            }
+
+            velocity.x = horizontal.x;
+            velocity.z = horizontal.z;
         }
     }
 
@@ -299,7 +297,6 @@ public class PlayerController3D : MonoBehaviour
     public void MoveByVector(Vector3 motion) => cc.Move(motion * Time.deltaTime);
     public void RefillDash() => dashesLeft = maxDashes;
     public void SetVelocity(Vector3 v) => velocity = v;
-
     public void SetRespawnPoint(Vector3 pos) => respawnPosition = pos;
 
     void RotateToFacing()
@@ -309,33 +306,13 @@ public class PlayerController3D : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(flat), rotationSpeed * Time.deltaTime);
     }
 
-    // MODIFICATA: ORA GESTISCE VITE E UI
     public void Die()
     {
         velocity = Vector3.zero;
-
-        // Gestione Vite
-        currentLives--;
-
-        // Aggiorna UI dei Cuori
-        if (LivesUI.Instance != null)
-        {
-            LivesUI.Instance.OnPlayerDied(currentLives);
-        }
-
-        if (currentLives <= 0)
-        {
-            // Reset base in caso di Game Over (puoi aggiungere altro qui)
-            currentLives = maxLives;
-            if (LivesUI.Instance != null) LivesUI.Instance.OnGameReset(currentLives);
-        }
-
-        // Teletrasporto al respawn
         cc.enabled = false;
         transform.position = respawnPosition;
         cc.enabled = true;
-
-        Debug.Log("Il Rapanello è morto! Vite rimaste: " + currentLives);
+        Debug.Log("Il Rapanello è caduto! Respawn effettuato.");
     }
 
     void OnDrawGizmosSelected()

@@ -1,12 +1,11 @@
 using UnityEngine;
-using TMPro; // Usiamo TextMeshPro per un testo più nitido
+using TMPro;
 
 public class ManagerMonete : MonoBehaviour
 {
-    public TextMeshProUGUI testoMonete; // Trascina qui il testo della UI
+    public TextMeshProUGUI testoMonete;
     private int moneteRaccolte = 0;
 
-    // Funzione da chiamare quando prendi una moneta
     public void AggiungiMoneta(int valore)
     {
         moneteRaccolte += valore;
@@ -15,6 +14,6 @@ public class ManagerMonete : MonoBehaviour
 
     void AggiornaGrafica()
     {
-        testoMonete.text = moneteRaccolte.ToString();
+        testoMonete.text = moneteRaccolte.ToString("D3");
     }
 }
