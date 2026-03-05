@@ -18,34 +18,12 @@ public class DashGem : MonoBehaviour
     public float popDuration = 0.25f;
     [Tooltip("How much the gem scales up during the pop")]
     public float popScaleMultiplier = 1.6f;
-    [Tooltip("How quickly the gem spins while idle")]
-    public float spinSpeed = 90f;
-    [Tooltip("How much the gem bobs up and down")]
-    public float bobAmplitude = 0.15f;
-    public float bobFrequency = 1.5f;
+   
 
     // ── Private ──
     private Vector3 _startPosition;
     private Vector3 _originalScale;
     private bool _collected = false;
-
-    private void Awake()
-    {
-        _startPosition = transform.position;
-        _originalScale = transform.localScale;
-    }
-
-    private void Update()
-    {
-        if (_collected) return;
-
-        // Idle spin
-        transform.Rotate(Vector3.up, spinSpeed * Time.deltaTime, Space.World);
-
-        // Idle bob
-        float newY = _startPosition.y + Mathf.Sin(Time.time * bobFrequency * Mathf.PI * 2f) * bobAmplitude;
-        transform.position = new Vector3(transform.position.x, newY, transform.position.z);
-    }
 
     private void OnTriggerEnter(Collider other)
     {

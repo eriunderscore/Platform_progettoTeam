@@ -12,8 +12,8 @@ public class Moneta : MonoBehaviour
     {
         switch (tipo)
         {
-            case TipoMoneta.Gold: return 50;
-            case TipoMoneta.Silver: return 10;
+            case TipoMoneta.Gold: return 10;
+            case TipoMoneta.Silver: return 5;
             case TipoMoneta.Bronze: return 1;
             default: return 1;
         }

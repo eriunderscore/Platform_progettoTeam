@@ -54,7 +54,7 @@ public class ContenitoreChiavi : MonoBehaviour
 
     void AggiornaStato()
     {
-        bool deveEssereVisibile = inventarioAperto || timerVisibilita > 0;
+        bool deveEssereVisibile = timerVisibilita > 0;
         if (pannelloChiavi != null) pannelloChiavi.SetActive(deveEssereVisibile);
     }
 }
