@@ -30,7 +30,7 @@ public class WallClimb : MonoBehaviour
     public float cameraWrapSpeed = 5f;
 
     [Header("Stamina UI")]
-    public StaminaUI staminaUI;
+    public StaminaUI staminaUI;   // drag StaminaUI object here
 
     // ── Public ────────────────────────────────────────────────
     public bool IsClimbing { get; private set; }
@@ -79,6 +79,7 @@ public class WallClimb : MonoBehaviour
         CurrentStamina = Mathf.MoveTowards(CurrentStamina, 0f, staminaDrainRate * Time.deltaTime);
         if (staminaUI != null) staminaUI.SetStamina(CurrentStamina / maxStamina);
 
+        // Out of stamina — fall off
         if (CurrentStamina <= 0f)
             ExitClimb();
     }
@@ -90,21 +91,6 @@ public class WallClimb : MonoBehaviour
         if (staminaUI != null) staminaUI.SetStamina(CurrentStamina / maxStamina);
     }
 
-    /// <summary>Called by DashGem to fully refill stamina instantly.</summary>
-    public void RefillStamina()
-    {
-        CurrentStamina = maxStamina;
-        if (staminaUI != null)
-        {
-            staminaUI.SetStamina(1f);
-
-            // Only show the UI if the player is currently on a wall
-            // If not climbing, the bar is already hidden — no need to show it
-            if (IsClimbing)
-                staminaUI.Show();
-        }
-    }
-
     // ──────────────────────────────────────────────────────────
     //  ATTACH
     // ──────────────────────────────────────────────────────────
@@ -112,7 +98,7 @@ public class WallClimb : MonoBehaviour
     {
         if (graceTimer <= 0f && !player.IsDashing) return;
         if (player.IsGrounded) return;
-        if (CurrentStamina <= 0f) return;
+        if (CurrentStamina <= 0f) return;   // no stamina = can't attach
 
         Collider[] cols = Physics.OverlapSphere(transform.position, 1.1f, wallLayer);
         if (cols.Length == 0) return;
@@ -185,7 +171,7 @@ public class WallClimb : MonoBehaviour
 
         // 2. Drain stamina every frame while climbing
         DrainStamina();
-        if (!IsClimbing) return;
+        if (!IsClimbing) return;   // stamina ran out mid-frame
 
         // 3. Camera smooth
         if (smoothingCamera && orbitCamera != null)

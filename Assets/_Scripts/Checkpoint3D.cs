@@ -1,85 +1,51 @@
-using System.Collections;
 using UnityEngine;
 
 public class Checkpoint3D : MonoBehaviour
 {
-    private bool isActivated = false;
-    public bool IsActivated => isActivated;
+    [Header("Spawn")]
+    public Vector3 spawnOffset = new Vector3(0f, 1f, 0f);
 
-    [Header("─── Color Settings ───")]
-    [Tooltip("Color of the checkpoint before activation")]
-    public Color inactiveColor = new Color(0.5f, 0.5f, 0.5f); // grey
-    [Tooltip("Color of the checkpoint after activation")]
-    public Color activeColor = new Color(1f, 0.8f, 0.1f);     // gold
-    [Tooltip("How long the fade transition takes in seconds")]
-    public float fadeDuration = 0.8f;
+    [Header("Colors")]
+    public Color inactiveColor = Color.white;
+    public Color activeColor = Color.green;
 
-    // ── Private ──
-    private Renderer _renderer;
-    private MaterialPropertyBlock _propBlock;
+    public bool IsActivated { get; private set; }
+    private MeshRenderer meshRenderer;
+    private Material matInstance;
 
-    private void Awake()
+    void Awake()
     {
-        _renderer = GetComponent<Renderer>();
-        _propBlock = new MaterialPropertyBlock();
+        meshRenderer = GetComponent<MeshRenderer>();
 
-        // Set starting color without creating a new material instance
-        SetColor(inactiveColor);
-    }
-
-    public void Activate() => isActivated = true;
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Player"))
+        if (meshRenderer != null)
         {
-            PlayerController3D player = other.GetComponent<PlayerController3D>();
-            if (player != null)
-            {
-                player.SetRespawnPoint(transform.position);
-
-                if (!isActivated)
-                {
-                    isActivated = true;
-                    Debug.Log("Checkpoint salvato in questa posizione!");
-                    StartCoroutine(FadeToColor(inactiveColor, activeColor));
-                }
-            }
+            // Create a brand new simple material so there are zero shader issues
+            matInstance = new Material(Shader.Find("Standard"));
+            matInstance.color = inactiveColor;
+            meshRenderer.material = matInstance;
         }
     }
 
-    // ──────────────────────────────────────────────────────────
-    //  COLOR
-    // ──────────────────────────────────────────────────────────
-
-    /// <summary>Instantly sets the material color using a PropertyBlock.
-    /// PropertyBlocks avoid creating duplicate materials in memory.</summary>
-    private void SetColor(Color color)
+    public void Activate()
     {
-        if (_renderer == null) return;
-        _renderer.GetPropertyBlock(_propBlock);
-        _propBlock.SetColor("_Color", color);
-        _renderer.SetPropertyBlock(_propBlock);
+        if (IsActivated) return;
+        IsActivated = true;
+
+        if (matInstance != null)
+            matInstance.color = activeColor;
+
+        Vector3 spawnPos = transform.position + spawnOffset;
+
+        if (GameManager.Instance != null)
+            GameManager.Instance.SetCheckpoint(spawnPos);
+
+        Debug.Log($"[Checkpoint] Saved respawn at {spawnPos}");
     }
 
-    /// <summary>Smoothly fades from one color to another over fadeDuration seconds.</summary>
-    private IEnumerator FadeToColor(Color from, Color to)
+    public void ResetCheckpoint()
     {
-        float elapsed = 0f;
-
-        while (elapsed < fadeDuration)
-        {
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / fadeDuration);
-
-            // SmoothStep makes the fade ease in and out instead of being linear
-            float smoothT = Mathf.SmoothStep(0f, 1f, t);
-            SetColor(Color.Lerp(from, to, smoothT));
-
-            yield return null;
-        }
-
-        // Snap to exact final color to avoid floating point drift
-        SetColor(to);
+        IsActivated = false;
+        if (matInstance != null)
+            matInstance.color = inactiveColor;
     }
 }
