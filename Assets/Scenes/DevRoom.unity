@@ -2034,6 +2034,10 @@ PrefabInstance:
       propertyPath: buttonImages.Array.data[1]
       value: 
       objectReference: {fileID: 900591181}
+    - target: {fileID: 7178103384829963589, guid: 49d8c6c41a60573428f2453667f2a035, type: 3}
+      propertyPath: dashCooldown
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7178103385299607378, guid: 49d8c6c41a60573428f2453667f2a035, type: 3}
       propertyPath: m_Name
       value: MenuText

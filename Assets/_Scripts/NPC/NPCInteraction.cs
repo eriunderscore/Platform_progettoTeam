@@ -178,6 +178,9 @@ public class NPCInteraction : MonoBehaviour
         // Pausa timer HUD durante il dialogo
         HUDManager.Instance?.OnDialogueStart();
 
+        // Abbassa musica durante interazione NPC
+        MusicManager.Instance?.OnNPCInteractionStart();
+
         // Mostra il menu con i 3 bottoni
         NPCMenuUI.Instance?.Show(
             talkCallback: OpenDialogue,
@@ -283,6 +286,9 @@ public class NPCInteraction : MonoBehaviour
 
         // Riprende timer HUD
         HUDManager.Instance?.OnDialogueEnd();
+
+        // Ripristina volume musica
+        MusicManager.Instance?.OnNPCInteractionEnd();
     }
 
     System.Collections.IEnumerator UnfreezeWithDelay()

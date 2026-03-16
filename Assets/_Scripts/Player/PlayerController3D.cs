@@ -1,4 +1,4 @@
-// ============================================================
+/// ============================================================
 //  PlayerController3D.cs
 //  Script UNIFICATO che fonde PlayerController3D + WallClimb.
 //  Richiede sulla stessa GameObject:
@@ -911,6 +911,31 @@ public class PlayerController3D : MonoBehaviour
     public bool IsClimbing => isClimbing;
     public float Stamina => currentStamina / maxStamina; // 0..1
     public void SetVelocity(Vector3 v) => velocity = v;
+    public Vector3 GetVelocity() => velocity;
+
+    // Chiamato automaticamente da CharacterController ad ogni collisione
+    void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        // ── MushroomBounce ────────────────────────────────────
+        MushroomBounce mushroom = hit.collider.GetComponent<MushroomBounce>();
+        if (mushroom != null)
+            mushroom.TryBounce(this, hit.normal);
+
+        // ── PlatformDetector (FallingPlatform, IcePlatform) ───
+        PlatformDetector pd = GetComponent<PlatformDetector>();
+        if (pd != null)
+            pd.OnHit(hit, !wasGroundedLastFrame);
+
+        // DEBUG — rimuovi dopo aver risolto
+        Debug.Log($"[CCHit] obj:{hit.collider.name} layer:{hit.collider.gameObject.layer} normal:{hit.normal} | IcePlatform:{hit.collider.GetComponent<IcePlatform>() != null}");
+    }
+
+    private bool wasGroundedLastFrame = false;
+
+    void LateUpdate()
+    {
+        wasGroundedLastFrame = isGrounded;
+    }
 
     // ══════════════════════════════════════════════════════════
     //  GIZMOS (visualizzazione nell'editor)

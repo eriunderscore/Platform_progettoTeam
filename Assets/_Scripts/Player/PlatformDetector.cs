@@ -2,23 +2,21 @@ using UnityEngine;
 
 /// <summary>
 /// Attach this to the Player.
-/// Detects FallingPlatform and IcePlatform beneath the player.
+/// Usa OnControllerColliderHit per rilevare qualsiasi tipo di collider
+/// (BoxCollider, MeshCollider, SphereCollider, ecc.)
 /// </summary>
 public class PlatformDetector : MonoBehaviour
 {
     [Header("Detection")]
-    public float     detectionRadius   = 0.3f;
-    public float     detectionDistance = 0.2f;
+    [Tooltip("LayerMask delle piattaforme speciali (FallingPlatform, IcePlatform)")]
     public LayerMask platformLayer;
 
     private PlayerController3D player;
 
-    // Tracking
     private FallingPlatform currentFalling;
-    private IcePlatform     currentIce;
-    private bool            wasGrounded = false;
+    private IcePlatform currentIce;
+    private bool wasGrounded = false;
 
-    // Valori originali del player — salvati prima di applicare il ghiaccio
     private float origAcceleration;
     private float origDeceleration;
     private float origAirAcceleration;
@@ -28,10 +26,8 @@ public class PlatformDetector : MonoBehaviour
     void Awake()
     {
         player = GetComponent<PlayerController3D>();
-
-        // Salva i valori originali una volta sola
-        origAcceleration    = player.acceleration;
-        origDeceleration    = player.deceleration;
+        origAcceleration = player.acceleration;
+        origDeceleration = player.deceleration;
         origAirAcceleration = player.airAcceleration;
     }
 
@@ -41,14 +37,9 @@ public class PlatformDetector : MonoBehaviour
 
         bool isGrounded = player.IsGrounded;
 
-        if (isGrounded)
+        // Quando il player lascia terra → rimuovi effetti
+        if (!isGrounded && wasGrounded)
         {
-            // Controlla la piattaforma sotto ogni frame (può cambiare)
-            CheckPlatformBelow(isLanding: !wasGrounded);
-        }
-        else
-        {
-            // Il player è in aria — rimuovi effetti piattaforma
             ClearFalling();
             ClearIce();
         }
@@ -56,55 +47,42 @@ public class PlatformDetector : MonoBehaviour
         wasGrounded = isGrounded;
     }
 
-    // ──────────────────────────────────────────────────────────
-    //  DETECTION
-    // ──────────────────────────────────────────────────────────
-
-    void CheckPlatformBelow(bool isLanding)
+    // ── Chiamato da PlayerController3D.OnControllerColliderHit ──
+    public void OnHit(ControllerColliderHit hit, bool isLanding)
     {
-        if (!Physics.SphereCast(transform.position, detectionRadius, Vector3.down,
-            out RaycastHit hit, detectionDistance, platformLayer))
-        {
-            // Niente sotto → rimuovi effetti
-            ClearFalling();
-            ClearIce();
-            return;
-        }
+        int objLayer = hit.collider.gameObject.layer;
+        bool inMask = (platformLayer.value & (1 << objLayer)) != 0;
+        Debug.Log($"[PlatformDetector] obj:{hit.collider.name} layer:{objLayer} inMask:{inMask} maskValue:{platformLayer.value} normalY:{hit.normal.y}");
+
+        if (!inMask) return;
+        if (hit.normal.y < 0.5f) return;
 
         // ── Falling Platform ──────────────────────────────────
         FallingPlatform falling = hit.collider.GetComponent<FallingPlatform>();
-        if (falling != null && isLanding && falling != currentFalling)
+        if (falling != null && falling != currentFalling)
         {
             currentFalling = falling;
-            falling.TriggerFall();
-        }
-        else if (falling == null)
-        {
-            ClearFalling();
+            if (isLanding) falling.TriggerFall();
         }
 
         // ── Ice Platform ──────────────────────────────────────
         IcePlatform ice = hit.collider.GetComponent<IcePlatform>();
         if (ice != null && ice != currentIce)
         {
-            ClearIce(); // rimuovi vecchio ghiaccio se c'era
+            ClearIce();
             currentIce = ice;
             ice.ApplyIce(player);
         }
-        else if (ice == null)
+        else if (ice == null && currentIce != null)
         {
+            // Non stiamo più toccando ghiaccio
             ClearIce();
         }
     }
 
     // ──────────────────────────────────────────────────────────
-    //  CLEAR
-    // ──────────────────────────────────────────────────────────
 
-    void ClearFalling()
-    {
-        currentFalling = null;
-    }
+    void ClearFalling() => currentFalling = null;
 
     void ClearIce()
     {
@@ -113,7 +91,6 @@ public class PlatformDetector : MonoBehaviour
         currentIce = null;
     }
 
-    // Chiamato se il player muore — resetta tutto
     public void ResetPlatformEffects()
     {
         ClearIce();
