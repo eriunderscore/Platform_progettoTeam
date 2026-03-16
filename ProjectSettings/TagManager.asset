@@ -11,7 +11,7 @@ TagManager:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - StaminaUI
   - Water
   - UI
   - Ground
@@ -23,7 +23,7 @@ TagManager:
   - Gold
   - Silver
   - Bronze
-  - 
+  - Platform
   - 
   - 
   - 
