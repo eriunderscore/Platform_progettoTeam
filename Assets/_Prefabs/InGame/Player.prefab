@@ -289,8 +289,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60a4d5f364e2a584cb5318ef01678af6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  detectionRadius: 0.3
-  detectionDistance: 1.2
   platformLayer:
     serializedVersion: 2
     m_Bits: 32768
@@ -525,7 +523,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: bf81b7b27c18346419f851d28ca6aeaa, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -564,6 +562,7 @@ MonoBehaviour:
   dashSquishAmount: 0.3
   squishSpeed: 18
   recoverySpeed: 12
+  minAirTimeForJumpSquish: 0.12
   player: {fileID: 1091170858161937393}
 --- !u!1 &1091170858634786548
 GameObject:

@@ -2038,6 +2038,18 @@ PrefabInstance:
       propertyPath: dashCooldown
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7178103384829963610, guid: 49d8c6c41a60573428f2453667f2a035, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7178103384829963611, guid: 49d8c6c41a60573428f2453667f2a035, type: 3}
+      propertyPath: stateClimbing
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7178103384829963615, guid: 49d8c6c41a60573428f2453667f2a035, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
     - target: {fileID: 7178103385299607378, guid: 49d8c6c41a60573428f2453667f2a035, type: 3}
       propertyPath: m_Name
       value: MenuText
