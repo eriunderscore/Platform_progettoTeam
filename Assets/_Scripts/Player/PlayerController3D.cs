@@ -1,4 +1,4 @@
-/// ============================================================
+// ============================================================
 //  PlayerController3D.cs
 //  Script UNIFICATO che fonde PlayerController3D + WallClimb.
 //  Richiede sulla stessa GameObject:
@@ -215,6 +215,10 @@ public class PlayerController3D : MonoBehaviour
 
     // Cooldown dopo LeapOff: evita re-attach immediato alla parete
     private int leapCooldownFrames = 0;
+
+    // Grace timer per pendii — evita Fall state brevissimi su slope
+    private float slopeGroundedTimer = 0f;
+    private const float SLOPE_GRACE = 0.12f;
 
     // ══════════════════════════════════════════════════════════
     //  UNITY LIFECYCLE
@@ -525,12 +529,23 @@ public class PlayerController3D : MonoBehaviour
             return;
         }
 
+        // Aggiorna il grace timer per i pendii
+        if (isGrounded)
+            slopeGroundedTimer = SLOPE_GRACE;
+        else if (slopeGroundedTimer > 0f)
+            slopeGroundedTimer -= Time.deltaTime;
+
         if (!isGrounded)
         {
+            // Entra in Fall/Jump solo se siamo davvero in aria da un po'
+            // Questo evita che su pendii scoscesi entri brevemente in Fall
+            bool trulyAirborne = slopeGroundedTimer <= 0f;
+
             if (velocity.y > 0f && isJumping)
                 stateMachine.ChangeState(PlayerState.Jump);
-            else
+            else if (trulyAirborne)
                 stateMachine.ChangeState(PlayerState.Fall);
+            // Se slopeGroundedTimer > 0 → rimane nello stato corrente (Idle/Run)
             return;
         }
 
@@ -926,8 +941,7 @@ public class PlayerController3D : MonoBehaviour
         if (pd != null)
             pd.OnHit(hit, !wasGroundedLastFrame);
 
-        // DEBUG — rimuovi dopo aver risolto
-        Debug.Log($"[CCHit] obj:{hit.collider.name} layer:{hit.collider.gameObject.layer} normal:{hit.normal} | IcePlatform:{hit.collider.GetComponent<IcePlatform>() != null}");
+
     }
 
     private bool wasGroundedLastFrame = false;
